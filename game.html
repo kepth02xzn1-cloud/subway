@@ -182,15 +182,11 @@
         let audioCtx; let musicInterval;
 
         // --- ENVIRONMENT VARIABLES ---
+// --- ENVIRONMENT VARIABLES ---
         let buildings = [];
         const buildingGeom = new THREE.BoxGeometry(1, 1, 1);
-        const buildingMaterials = [
-            new THREE.MeshLambertMaterial({ color: 0x8a9ba8 }),
-            new THREE.MeshLambertMaterial({ color: 0x5c7080 }),
-            new THREE.MeshLambertMaterial({ color: 0xbfccd6 }),
-            new THREE.MeshLambertMaterial({ color: 0xaebac5 }),
-            new THREE.MeshLambertMaterial({ color: 0x394b59 })
-        ];
+        let texturedBuildingMaterials = []; // We will fill this with textured materials
+        let asphaltMaterial, grassMaterial; // Materials for the ground
 
         // --- MODEL LOADING & ANIMATIONS ---
         const loadedModels = {};
@@ -236,29 +232,54 @@
             dirLight.castShadow = true;
             scene.add(dirLight);
 
-            // --- IMPROVED ENVIRONMENT GROUND SETUP ---
-            // Main Track (Concrete)
-            const trackMat = new THREE.MeshPhongMaterial({ color: 0x555555 });
-            const track = new THREE.Mesh(new THREE.PlaneGeometry(15, 300), trackMat);
-            track.rotation.x = -Math.PI / 2;
-            track.position.z = -50;
-            track.receiveShadow = true;
-            scene.add(track);
+// --- TEXTURE LOADING & GROUND SETUP ---
+            const textureLoader = new THREE.TextureLoader();
 
-            // Left Grass Area
-            const grassMat = new THREE.MeshPhongMaterial({ color: 0x3cb371 });
-            const grassLeft = new THREE.Mesh(new THREE.PlaneGeometry(100, 300), grassMat);
-            grassLeft.rotation.x = -Math.PI / 2;
-            grassLeft.position.set(-57.5, -0.05, -50);
-            grassLeft.receiveShadow = true;
-            scene.add(grassLeft);
+            // Load House Textures and create their materials
+            const houseUrls = [
+                'https://raw.githubusercontent.com/kubmakk/subway/main/src/house.jpg',
+                'https://raw.githubusercontent.com/kubmakk/subway/main/src/house1.jpg',
+                'https://raw.githubusercontent.com/kubmakk/subway/main/src/house2.jpg'
+            ];
+            houseUrls.forEach(url => {
+                textureLoader.load(url, (texture) => {
+                    texturedBuildingMaterials.push(new THREE.MeshLambertMaterial({ map: texture }));
+                });
+            });
 
-            // Right Grass Area
-            const grassRight = new THREE.Mesh(new THREE.PlaneGeometry(100, 300), grassMat);
-            grassRight.rotation.x = -Math.PI / 2;
-            grassRight.position.set(57.5, -0.05, -50);
-            grassRight.receiveShadow = true;
-            scene.add(grassRight);
+            // Load Asphalt Texture
+            textureLoader.load('https://raw.githubusercontent.com/kubmakk/subway/main/src/asphalt.jpg', (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(5, 100); // Repeat texture 5 times width-wise, 100 times length-wise
+                asphaltMaterial = new THREE.MeshPhongMaterial({ map: texture });
+
+                const track = new THREE.Mesh(new THREE.PlaneGeometry(15, 300), asphaltMaterial);
+                track.rotation.x = -Math.PI / 2;
+                track.position.z = -50;
+                track.receiveShadow = true;
+                scene.add(track);
+            });
+
+            // Load Grass Texture
+            textureLoader.load('https://raw.githubusercontent.com/kubmakk/subway/main/src/grass.jpg', (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(30, 100); // Repeat grass texture more to look natural
+                grassMaterial = new THREE.MeshPhongMaterial({ map: texture });
+                
+                const grassLeft = new THREE.Mesh(new THREE.PlaneGeometry(100, 300), grassMaterial);
+                grassLeft.rotation.x = -Math.PI / 2;
+                grassLeft.position.set(-57.5, -0.05, -50);
+                grassLeft.receiveShadow = true;
+                scene.add(grassLeft);
+                
+                const grassRight = new THREE.Mesh(new THREE.PlaneGeometry(100, 300), grassMaterial);
+                grassRight.rotation.x = -Math.PI / 2;
+                grassRight.position.set(57.5, -0.05, -50);
+                grassRight.receiveShadow = true;
+                scene.add(grassRight);
+            });
 
             // White Lane Dividers
             for (let i = -1; i <= 1; i += 2) {
@@ -323,7 +344,8 @@ document.getElementById('storeBtn').addEventListener('click', openStore);
         }
 
         function createBuilding(x, z, isFrontRow) {
-            const mat = buildingMaterials[Math.floor(Math.random() * buildingMaterials.length)];
+            if (texturedBuildingMaterials.length === 0) return; // Don't crash if textures aren't loaded yet
+            const mat = texturedBuildingMaterials[Math.floor(Math.random() * texturedBuildingMaterials.length)];
             const mesh = new THREE.Mesh(buildingGeom, mat);
             
             const width = 6 + Math.random() * 6;
@@ -586,7 +608,19 @@ function spawnObstacle(x, z, type) {
     }
         }
 
-        function updateWorld() {
+function updateWorld() {
+            // --- PERFECT SCROLL GROUND TEXTURES ---
+            if (asphaltMaterial && asphaltMaterial.map) {
+                // Reversed to += and changed to exact ratio (100 repeats / 300 length)
+                asphaltMaterial.map.offset.y += speed * 0.3333;
+            }
+            if (grassMaterial && grassMaterial.map) {
+                grassMaterial.map.offset.y += speed * 0.3333;
+            }
+
+            // ... the rest of the function continues below
+            // --- END SCROLL ---
+            
             distance += speed;
             score = Math.floor(distance / 10);
             speed += 0.00003;
@@ -700,7 +734,7 @@ function gameOver() {
 
         function onKeyDown(event) {
             if (!gameActive) return;
-            if (event.code === 'Space' || event.code === 'ArrowUp') {
+            if (event.code === 'Escape') {
     togglePause();
     return;
 }
