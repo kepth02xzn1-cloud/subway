@@ -306,6 +306,7 @@
         <h1>Paused</h1>
         <button id="resumeBtn">Resume Game</button>
         <button id="restartBtn" class="btn-red">Restart Run</button>
+        <button id="menuBtn" class="btn-gray">Main Menu</button>
     </div>
 
     <!-- IN-GAME HUD -->
@@ -510,7 +511,8 @@
             { name: 'coin', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/subway_surfers_coin.glb', height: 1.0 },
             { name: 'bootsJump', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/air_jordan_1.glb', height: 1.0 },
             { name: 'obstacles', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/sanstitre.glb', height: 1.0, rotY: Math.PI / 2 },
-            { name: 'fencing', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/fencing.glb', height: 2.0 }
+            { name: 'fencing', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/fencing.glb', height: 2.0 },
+            { name: 'speed', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/arrow.glb', height: 1.0 }
         ];
 
         let modelsLoadedCount = 0;
@@ -600,6 +602,10 @@
                 togglePause();
                 resetGame();
                 playPlayerAnimation('run');
+            });
+            document.getElementById('menuBtn').addEventListener('click', () => {
+                togglePause(); // Unpause the background game loop
+                quitToMenu(); // Trigger the end-of-run logic
             });
 
             document.getElementById('storeBtn').addEventListener('click', openStore);
@@ -1068,6 +1074,35 @@
         function removeObject(index) {
             scene.remove(worldObjects[index].mesh);
             worldObjects.splice(index, 1);
+        }
+
+        function quitToMenu() {
+            gameActive = false;
+            document.getElementById('action-buttons').style.display = 'none';
+            stopMusic();
+
+            // Save run coins and distance to bank/missions
+            totalCoins += coinCount;
+            totalDistanceRun += score;
+
+            missions.forEach(m => {
+                if (m.claimed) return; // Skip if already claimed
+
+                if (m.type === "distance" && score > m.progress) m.progress = score;
+                if (m.type === "coins_run" && coinCount > m.progress) m.progress = coinCount;
+                if (m.type === "coins_total") m.progress += coinCount;
+                if (m.type === "distance_total") m.progress += score;
+
+                // Cap progress
+                if (m.progress > m.target) m.progress = m.target;
+            });
+
+            // Show the main menu
+            document.getElementById('menu').style.display = 'flex';
+            document.getElementById('menu-title').innerText = "Run Ended";
+            document.getElementById('menu-stats').innerHTML = `Final Score: ${score}<br>Run Coins: ${coinCount}`;
+            document.getElementById('menu-total-coins').innerText = totalCoins;
+            document.getElementById('startBtn').innerText = "Play Again";
         }
 
         function gameOver() {
