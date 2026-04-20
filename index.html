@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subway Surfers 3D Clone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Fredoka', sans-serif;
+            background-color: #87CEEB;
+            user-select: none;
+        }
+
+        /* --- IN-GAME HUD --- */
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 15px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .hud-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: white;
+            font-size: 22px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .hud-box span {
+            color: #FFD700;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        #powerup-status {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            color: #00e6ff;
+            font-size: 20px;
+            font-weight: 700;
+            text-shadow: 2px 2px 0px #000;
+            animation: pulse 1s infinite alternate;
+        }
+
+        /* --- MENUS --- */
+        .menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(20, 40, 60, 0.8) 0%, rgba(0, 0, 0, 0.95) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 20;
+            backdrop-filter: blur(8px);
+        }
+
+        h1 {
+            font-size: 64px;
+            margin-bottom: 10px;
+            margin-top: 0;
+            color: #FFD700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 6px 0 #b38f00, 0 10px 20px rgba(0, 0, 0, 0.8);
+            -webkit-text-stroke: 2px #fff;
+            text-align: center;
+        }
+
+        p {
+            font-size: 22px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #ddd;
+        }
+
+        .highlight {
+            color: #FFD700;
+            font-weight: 700;
+            font-size: 28px;
+        }
+
+        /* --- BUTTONS --- */
+        button {
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Fredoka', sans-serif;
+            color: white;
+            text-transform: uppercase;
+            background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #1B5E20, 0 15px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.1s;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+            transform: translateY(2px);
+            box-shadow: 0 6px 0 #1B5E20, 0 10px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        button:active {
+            transform: translateY(8px);
+            box-shadow: 0 0 0 #1B5E20, 0 5px 5px rgba(0, 0, 0, 0.4);
+        }
+
+        button:disabled {
+            background: #888;
+            box-shadow: 0 8px 0 #555;
+            cursor: not-allowed;
+            color: #ccc;
+        }
+
+        .btn-purple {
+            background: linear-gradient(to bottom, #9C27B0, #6A1B9A);
+            box-shadow: 0 8px 0 #4A148C;
+        }
+
+        .btn-purple:hover {
+            box-shadow: 0 6px 0 #4A148C;
+        }
+
+        .btn-purple:active {
+            box-shadow: 0 0 0 #4A148C;
+        }
+
+        .btn-red {
+            background: linear-gradient(to bottom, #f44336, #c62828);
+            box-shadow: 0 8px 0 #8e0000;
+        }
+
+        .btn-red:hover {
+            box-shadow: 0 6px 0 #8e0000;
+        }
+
+        .btn-red:active {
+            box-shadow: 0 0 0 #8e0000;
+        }
+
+        .btn-gray {
+            background: linear-gradient(to bottom, #9e9e9e, #616161);
+            box-shadow: 0 8px 0 #424242;
+        }
+
+        /* --- STORE UI --- */
+        .store-grid {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin-top: 20px;
+            max-height: 55vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .skin-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 140px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s;
+        }
+
+        .skin-card:hover {
+            transform: scale(1.05);
+            border-color: #FFD700;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .skin-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 4px solid #fff;
+            box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.3), 0 5px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .skin-card h3 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .skin-card p {
+            font-size: 16px;
+            margin: 0 0 15px 0;
+            color: #FFD700;
+        }
+
+        .skin-card button {
+            margin: 0;
+            padding: 10px 15px;
+            font-size: 16px;
+            box-shadow: 0 5px 0 #1B5E20;
+            width: 100%;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* --- MISSIONS UI --- */
+        .mission-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 600px;
+            width: 90%;
+            margin-top: 20px;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .mission-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .mission-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 22px;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+            text-align: left;
+        }
+
+        .mission-info p {
+            margin: 0;
+            font-size: 18px;
+            color: #FFD700;
+            text-align: left;
+        }
+
+        .mission-btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 0;
+            width: 140px;
+        }
+
+        .mission-btn.locked {
+            background: #555;
+            box-shadow: 0 5px 0 #333;
+            cursor: not-allowed;
+            color: #ddd;
+        }
+
+        .mission-btn.claimed {
+            background: transparent;
+            border: 2px solid #555;
+            box-shadow: none;
+            cursor: not-allowed;
+            color: #aaa;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+
+<body>
+    <!-- PAUSE MENU -->
+    <div id="pause-menu" class="menu-overlay" style="display: none; z-index: 30;">
+        <h1>Paused</h1>
+        <button id="resumeBtn">Resume Game</button>
+        <button id="restartBtn" class="btn-red">Restart Run</button>
+        <button id="menuBtn" class="btn-gray">Main Menu</button>
+    </div>
+
+    <!-- IN-GAME HUD -->
+    <div id="ui">
+        <div class="hud-box">🏆 Score: <span id="score">0</span></div>
+        <div class="hud-box">🟡 Coins: <span id="coins">0</span></div>
+    </div>
+    <div id="powerup-status" style="pointer-events: none; z-index: 10;"></div>
+
+    <!-- ACTION BUTTONS -->
+    <div id="action-buttons"
+        style="position: absolute; bottom: 30px; right: 30px; display: none; gap: 20px; z-index: 20;">
+        <button id="useMagnetBtn" class="btn-purple"
+            style="font-size: 24px; padding: 10px; border-radius: 20px; width: 85px; height: 85px; position: relative;">
+            <span style="position:absolute; top: 5px; left: 5px; font-size: 12px; color: #ccc;">[Q]</span>🧲<br><span
+                id="magnet-count" style="font-size: 16px;">0</span>
+        </button>
+        <button id="useSkateboardBtn"
+            style="font-size: 24px; padding: 10px; border-radius: 20px; width: 85px; height: 85px; background: linear-gradient(to bottom, #4CAF50, #2E7D32); box-shadow: 0 6px 0 #1B5E20; color: white; border: none; cursor: pointer; position: relative;">
+            <span style="position:absolute; top: 5px; left: 5px; font-size: 12px; color: #ccc;">[E]</span>🛹<br><span
+                id="skateboard-count" style="font-size: 16px;">0</span>
+        </button>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div id="menu" class="menu-overlay">
+        <h1 id="menu-title">Subway Chase</h1>
+        <p id="menu-stats">A/D or Arrows to Move <br> Space to Jump | Down Arrow to Roll</p>
+        <div class="hud-box" style="margin-bottom: 20px; font-size: 28px;">
+            🏦 Bank: <span id="menu-total-coins">0</span> 🟡
+        </div>
+
+        <button id="startBtn" disabled>Loading World...</button>
+        <button id="storeBtn" class="btn-purple" style="display: none;">🛒 Open Store</button>
+        <div style="display: flex; gap: 15px; margin-top: 10px;">
+            <button id="storeBtn" class="btn-purple" style="display: none; margin: 0;">🛒 Store</button>
+            <button id="missionsBtn"
+                style="display: none; margin: 0; background: linear-gradient(to bottom, #2196F3, #1565C0); box-shadow: 0 8px 0 #0D47A1;">📜
+                Missions</button>
+        </div>
+        <p id="loading-text" style="color: #aaa; margin-top: 15px;">Downloading assets (0/8)...</p>
+    </div>
+
+    <!-- MISSIONS MENU -->
+    <div id="missions-menu" class="menu-overlay" style="display: none;">
+        <h1>Missions</h1>
+        <div class="hud-box" style="margin-bottom: 10px;">
+            Bank: <span id="missions-coins">0</span> 🟡
+        </div>
+        <div class="mission-list" id="mission-container">
+            <!-- Missions will be injected here by JS -->
+        </div>
+        <button id="closeMissionsBtn" class="btn-gray" style="margin-top: 30px;">⬅ Back to Menu</button>
+    </div>
+
+    <!-- STORE MENU -->
+    <div id="store-menu" class="menu-overlay" style="display: none;">
+        <h1>Store & Upgrades</h1>
+        <div class="hud-box" style="margin-bottom: 10px;">
+            Your Bank: <span id="store-coins">0</span> 🟡
+        </div>
+
+        <div class="store-grid">
+            <div class="skin-card">
+                <div class="skin-preview" style="background: #333333;"></div>
+                <h3>Stealth</h3>
+                <p>10 Coins</p>
+                <button id="btn-skin-black">Buy</button>
+            </div>
+            <div class="skin-card">
+                <div class="skin-preview" style="background: #28a745;"></div>
+                <h3>Toxic</h3>
+                <p>20 Coins</p>
+                <button id="btn-skin-green">Buy</button>
+            </div>
+            <div class="skin-card">
+                <div class="skin-preview" style="background: #ffc107;"></div>
+                <h3>Voltage</h3>
+                <p>30 Coins</p>
+                <button id="btn-skin-yellow">Buy</button>
+            </div>
+            <div class="skin-card">
+                <div class="skin-preview" style="background: #dc3545;"></div>
+                <h3>Inferno</h3>
+                <p>40 Coins</p>
+                <button id="btn-skin-red">Buy</button>
+            </div>
+            <div class="skin-card">
+                <div class="skin-preview" style="background: #007bff;"></div>
+                <h3>Glacier</h3>
+                <p>50 Coins</p>
+                <button id="btn-skin-blue">Buy</button>
+            </div>
+            <!-- UPGRADES -->
+            <div class="skin-card">
+                <div class="skin-preview"
+                    style="background: #9c27b0; font-size: 40px; text-align: center; line-height: 75px;">🧲</div>
+                <h3>Magnet Time</h3>
+                <p id="cost-magnet">50 Coins</p>
+                <button id="btn-upg-magnet" class="btn-purple">Upgrade</button>
+            </div>
+            <div class="skin-card">
+                <div class="skin-preview"
+                    style="background: #e91e63; font-size: 40px; text-align: center; line-height: 75px;">❤️</div>
+                <h3>Max Life +1</h3>
+                <p id="cost-lives">100 Coins</p>
+                <button id="btn-upg-lives" class="btn-purple">Upgrade</button>
+            </div>
+            <div class="skin-card">
+                <div class="skin-preview"
+                    style="background: #00bcd4; font-size: 40px; text-align: center; line-height: 75px;">🚀</div>
+                <h3>Jetpack Time</h3>
+                <p id="cost-hoverboard">50 Coins</p>
+                <button id="btn-upg-hoverboard" class="btn-purple">Upgrade</button>
+            </div>
+            <div class="skin-card">
+                <div class="skin-preview"
+                    style="background: #ff9800; font-size: 40px; text-align: center; line-height: 75px;">👟</div>
+                <h3>Boots Time</h3>
+                <p id="cost-boots">50 Coins</p>
+                <button id="btn-upg-boots" class="btn-purple">Upgrade</button>
+            </div>
+            <!-- CONSUMABLES -->
+            <div class="skin-card">
+                <div class="skin-preview"
+                    style="background: #9c27b0; font-size: 40px; text-align: center; line-height: 75px;">🧲</div>
+                <h3>Magnet</h3>
+                <p>20 Coins</p>
+                <button id="btn-buy-magnet" class="btn-purple">Buy</button>
+            </div>
+            <div class="skin-card">
+                <div class="skin-preview"
+                    style="background: #4caf50; font-size: 40px; text-align: center; line-height: 75px;">🛹</div>
+                <h3>Skateboard</h3>
+                <p>30 Coins</p>
+                <button id="btn-buy-skateboard" class="btn-purple">Buy</button>
+            </div>
+        </div>
+
+        <button id="closeStoreBtn" class="btn-gray" style="margin-top: 30px;">⬅ Back to Menu</button>
+    </div>
+
+    <script>
+        let isPaused = false;
+        let totalCoins = 0;
+        let unlockedSkins = { black: false, green: false, yellow: false, red: false, blue: false };
+        let totalDistanceRun = 0;
+        let missions = [
+            { id: 0, text: "Run 500m in one run", type: "distance", target: 500, reward: 50, progress: 0, claimed: false },
+            { id: 1, text: "Collect 50 coins in one run", type: "coins_run", target: 50, reward: 30, progress: 0, claimed: false },
+            { id: 2, text: "Accumulate 200 coins total", type: "coins_total", target: 200, reward: 100, progress: 0, claimed: false },
+            { id: 3, text: "Run 2000m total across games", type: "distance_total", target: 2000, reward: 150, progress: 0, claimed: false }
+        ];
+        let scene, camera, renderer;
+        let player, cop;
+        let worldObjects = [];
+        let gameActive = false;
+
+        let score = 0, coinCount = 0, speed = 0.4, distance = 0;
+        let currentLane = 0; const laneWidth = 3; let targetX = 0;
+        let velocityY = 0; const gravity = -0.015; let isJumping = false;
+        let jumpStrength = 0.3; let baseJumpStrength = 0.3;
+        let isRolling = false;
+        let rollTimer = 0;
+        let flyMode = false; let flyTimer = 0; let jumpBoostTimer = 0;
+        let maxLives = 3;
+        let lives = maxLives;
+        let baseFlyTimer = 400;
+        let baseJumpBoostTimer = 600;
+        let baseMagnetTimer = 400;
+        let magnetActive = false;
+        let magnetTimer = 0;
+        let upgradeCosts = { lives: 100, hoverboard: 50, boots: 50, magnet: 50 };
+        let upgradeLevels = { lives: 0, hoverboard: 0, boots: 0, magnet: 0 };
+        let inventory = { magnets: 0, skateboards: 0 };
+        let skateboardActive = false;
+        let shakeTimer = 0; let lifeRegenTimer = 0;
+
+        let audioCtx; let musicInterval;
+
+        // --- ENVIRONMENT VARIABLES ---
+        // --- ENVIRONMENT VARIABLES ---
+        let buildings = [];
+        const buildingGeom = new THREE.BoxGeometry(1, 1, 1);
+        let texturedBuildingMaterials = []; // We will fill this with textured materials
+        let asphaltMaterial, grassMaterial; // Materials for the ground
+
+        // --- MODEL LOADING & ANIMATIONS ---
+        const loadedModels = {};
+        const animationMixers = [];
+        let playerMixer = null;
+        let playerActions = {};
+        let activePlayerAction = null;
+
+        const clock = new THREE.Clock();
+
+        const assetsToLoad = [
+            { name: 'jake', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/jake_subway_surfers_real.glb', height: 2 },
+            { name: 'cop', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/inspector_subway_surfers.glb', height: 2.2 },
+            { name: 'train', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/subway_surfers_train.glb', height: 3.5, rotY: Math.PI },
+            { name: 'hoverboard', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/scifi_jetpack.glb', height: 1.0 },
+            { name: 'coin', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/subway_surfers_coin.glb', height: 1.0 },
+            { name: 'bootsJump', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/air_jordan_1.glb', height: 1.0 },
+            { name: 'obstacles', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/sanstitre.glb', height: 1.0, rotY: Math.PI / 2 },
+            { name: 'fencing', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/fencing.glb', height: 2.0 },
+            { name: 'speed', url: 'https://raw.githubusercontent.com/kubmakk/subway/main/src/arrow.glb', height: 1.0 }
+        ];
+
+        let modelsLoadedCount = 0;
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            // Updated Fog values for smoother distant building pop-ins
+            scene.fog = new THREE.Fog(0x87CEEB, 40, 200);
+
+            // Increased far clipping plane to 300 to render distant background objects
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 300);
+            camera.position.set(0, 5, 10);
+            camera.lookAt(0, 1, -10);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(-10, 20, 10);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            // --- TEXTURE LOADING & GROUND SETUP ---
+            const textureLoader = new THREE.TextureLoader();
+
+            // Load House Textures and create their materials
+            const houseUrls = [
+                'https://raw.githubusercontent.com/kubmakk/subway/main/src/house.jpg',
+                'https://raw.githubusercontent.com/kubmakk/subway/main/src/house1.jpg',
+                'https://raw.githubusercontent.com/kubmakk/subway/main/src/house3.jpg'
+            ];
+            houseUrls.forEach(url => {
+                textureLoader.load(url, (texture) => {
+                    texturedBuildingMaterials.push(new THREE.MeshLambertMaterial({ map: texture }));
+                });
+            });
+
+            // Load Asphalt Texture
+            textureLoader.load('https://raw.githubusercontent.com/kubmakk/subway/main/src/asphalt.jpg', (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(5, 100); // Repeat texture 5 times width-wise, 100 times length-wise
+                asphaltMaterial = new THREE.MeshPhongMaterial({ map: texture });
+
+                const track = new THREE.Mesh(new THREE.PlaneGeometry(15, 300), asphaltMaterial);
+                track.rotation.x = -Math.PI / 2;
+                track.position.z = -50;
+                track.receiveShadow = true;
+                scene.add(track);
+            });
+
+            // Load Grass Texture
+            textureLoader.load('https://raw.githubusercontent.com/kubmakk/subway/main/src/grass.jpg', (texture) => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(30, 100); // Repeat grass texture more to look natural
+                grassMaterial = new THREE.MeshPhongMaterial({ map: texture });
+
+                const grassLeft = new THREE.Mesh(new THREE.PlaneGeometry(100, 300), grassMaterial);
+                grassLeft.rotation.x = -Math.PI / 2;
+                grassLeft.position.set(-57.5, -0.05, -50);
+                grassLeft.receiveShadow = true;
+                scene.add(grassLeft);
+
+                const grassRight = new THREE.Mesh(new THREE.PlaneGeometry(100, 300), grassMaterial);
+                grassRight.rotation.x = -Math.PI / 2;
+                grassRight.position.set(57.5, -0.05, -50);
+                grassRight.receiveShadow = true;
+                scene.add(grassRight);
+            });
+
+            // White Lane Dividers
+            for (let i = -1; i <= 1; i += 2) {
+                const line = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 300), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                line.rotation.x = -Math.PI / 2;
+                line.position.set(i * 1.5, 0.01, -50);
+                scene.add(line);
+            }
+
+            document.getElementById('resumeBtn').addEventListener('click', togglePause);
+            document.getElementById('restartBtn').addEventListener('click', () => {
+                togglePause();
+                resetGame();
+                playPlayerAnimation('run');
+            });
+            document.getElementById('menuBtn').addEventListener('click', () => {
+                togglePause(); // Unpause the background game loop
+                quitToMenu(); // Trigger the end-of-run logic
+            });
+
+            document.getElementById('storeBtn').addEventListener('click', openStore);
+            document.getElementById('closeStoreBtn').addEventListener('click', closeStore);
+
+            // Note: 0x333333 is used for black so you can still see 3D shadows.
+            document.getElementById('btn-skin-black').addEventListener('click', () => handleSkinClick('black', 10, 0x333333, 'btn-skin-black'));
+            document.getElementById('btn-skin-green').addEventListener('click', () => handleSkinClick('green', 20, 0x00ff00, 'btn-skin-green'));
+            document.getElementById('btn-skin-yellow').addEventListener('click', () => handleSkinClick('yellow', 30, 0xffff00, 'btn-skin-yellow'));
+            document.getElementById('btn-skin-red').addEventListener('click', () => handleSkinClick('red', 40, 0xff0000, 'btn-skin-red'));
+            document.getElementById('btn-skin-blue').addEventListener('click', () => handleSkinClick('blue', 50, 0x0000ff, 'btn-skin-blue'));
+
+            // Spawn initial procedural city landscape for the background
+            initBuildings();
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('keydown', onKeyDown);
+            document.getElementById('startBtn').addEventListener('click', startGame);
+
+            loadModels();
+            animate();
+        }
+
+        function togglePause() {
+            if (!gameActive) return; // Only pause if the game is actually running
+
+            isPaused = !isPaused;
+            document.getElementById('pause-menu').style.display = isPaused ? 'flex' : 'none';
+        }
+        // --- CITY ENVIRONMENT FUNCTIONS ---
+        function initBuildings() {
+            buildings.forEach(b => scene.remove(b));
+            buildings = [];
+            // Spawn buildings far into the horizon so there's no empty void
+            for (let z = 30; z >= -200; z -= 20) {
+                spawnBuildingRow(z);
+            }
+        }
+
+        function spawnBuildingRow(z) {
+            // Left side city blocks
+            createBuilding(-12 - Math.random() * 5, z, true);
+            createBuilding(-25 - Math.random() * 10, z - Math.random() * 10, false);
+
+            // Right side city blocks
+            createBuilding(12 + Math.random() * 5, z, true);
+            createBuilding(25 + Math.random() * 10, z - Math.random() * 10, false);
+        }
+
+        function createBuilding(x, z, isFrontRow) {
+            if (texturedBuildingMaterials.length === 0) return; // Don't crash if textures aren't loaded yet
+            const mat = texturedBuildingMaterials[Math.floor(Math.random() * texturedBuildingMaterials.length)];
+            const mesh = new THREE.Mesh(buildingGeom, mat);
+
+            const width = 6 + Math.random() * 6;
+            // Front row buildings are slightly shorter than background ones
+            const height = isFrontRow ? (10 + Math.random() * 15) : (25 + Math.random() * 30);
+            const depth = 6 + Math.random() * 6;
+
+            mesh.scale.set(width, height, depth);
+            mesh.position.set(x, height / 2, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            scene.add(mesh);
+            buildings.push(mesh);
+        }
+
+        function loadModels() {
+            const loader = new THREE.GLTFLoader();
+
+            assetsToLoad.forEach(asset => {
+                loader.load(asset.url, (gltf) => {
+                    let model = gltf.scene;
+
+                    model.traverse(function (child) {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            child.frustumCulled = false;
+                            if (child.material) {
+                                child.material.side = THREE.DoubleSide;
+                                child.material.transparent = false; // Forces it to be solid
+                                child.material.depthWrite = true;   // Fixes weird see-through overlaps
+                            }
+                        }
+                    });
+
+                    if (asset.customScale) {
+                        model.scale.set(asset.customScale, asset.customScale, asset.customScale);
+                    } else {
+                        const box = new THREE.Box3().setFromObject(model);
+                        const size = box.getSize(new THREE.Vector3());
+                        if (size.y > 0) {
+                            const scaleFactor = asset.height / size.y;
+                            model.scale.set(scaleFactor, scaleFactor, scaleFactor);
+                        }
+                    }
+
+                    if (asset.rotY) model.rotation.y = asset.rotY;
+                    if (asset.yOffset) model.position.y = asset.yOffset;
+
+                    const centeredBox = new THREE.Box3().setFromObject(model);
+                    const center = centeredBox.getCenter(new THREE.Vector3());
+                    const bottomY = centeredBox.min.y;
+                    model.children.forEach(child => {
+                        child.position.x -= center.x;
+                        child.position.y -= bottomY;
+                        child.position.z -= center.z;
+                    });
+
+                    loadedModels[asset.name] = model;
+
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        model.userData.animations = gltf.animations;
+                    }
+
+                    modelsLoadedCount++;
+                    document.getElementById('loading-text').innerText = `Downloading assets (${modelsLoadedCount}/${assetsToLoad.length})`;
+
+                    if (modelsLoadedCount === assetsToLoad.length) {
+                        onAllModelsLoaded();
+                    }
+                }, undefined, (error) => {
+                    console.error(`Failed to load ${asset.url}:`, error);
+                    document.getElementById('loading-text').innerText = `Error loading ${asset.name}. Check F12 Console.`;
+                });
+            });
+        }
+
+        function onAllModelsLoaded() {
+            document.getElementById('startBtn').innerText = "Start Game";
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('loading-text').style.display = 'none';
+            document.getElementById('storeBtn').style.display = 'block';
+            document.getElementById('missionsBtn').style.display = 'block';
+
+            player = loadedModels['jake'].clone();
+            scene.add(player);
+            player.rotation.y = Math.PI;
+
+            setupPlayerAnimations(player);
+
+            cop = loadedModels['cop'].clone();
+            scene.add(cop);
+            cop.rotation.y = Math.PI;
+
+            if (cop.userData.animations) {
+                const m = new THREE.AnimationMixer(cop);
+                m.clipAction(cop.userData.animations[0]).play();
+                animationMixers.push(m);
+            }
+        }
+
+        function setupPlayerAnimations(model) {
+            if (loadedModels['jake'].userData.animations) {
+                const anims = loadedModels['jake'].userData.animations;
+                playerMixer = new THREE.AnimationMixer(model);
+                anims.forEach(clip => {
+                    playerActions[clip.name.toLowerCase()] = playerMixer.clipAction(clip);
+                });
+                activePlayerAction = playerMixer.clipAction(anims[0]);
+                activePlayerAction.play();
+                animationMixers.push(playerMixer);
+            }
+        }
+
+        function playPlayerAnimation(nameKeyword) {
+            if (!playerMixer) return;
+            let newAction = null;
+            for (const [name, action] of Object.entries(playerActions)) {
+                if (name.includes(nameKeyword)) newAction = action;
+            }
+            if (newAction && newAction !== activePlayerAction) {
+                if (activePlayerAction) activePlayerAction.fadeOut(0.2);
+                newAction.reset().fadeIn(0.2).play();
+                activePlayerAction = newAction;
+            }
+        }
+
+        function startGame() {
+            document.getElementById('menu').style.display = 'none';
+            resetGame();
+            initAudio();
+            document.getElementById('action-buttons').style.display = 'flex';
+            updateConsumableUI();
+            gameActive = true;
+            playPlayerAnimation('run');
+        }
+
+        function resetGame() {
+            worldObjects.forEach(obj => scene.remove(obj.mesh));
+            worldObjects = [];
+            score = 0; coinCount = 0; speed = 0.2; distance = 0; currentLane = 0; targetX = 0;
+            player.position.set(0, 0, 0);
+            cop.position.set(0, 0, 6);
+            velocityY = 0; flyMode = false; flyTimer = 0; jumpBoostTimer = 0; jumpStrength = 0.3; skateboardActive = false; magnetActive = false; magnetTimer = 0;
+            lives = maxLives; shakeTimer = 0; lifeRegenTimer = 0;
+            camera.position.set(0, 5, 10); // Ensures camera isn't stuck shaking if you restart quickly
+            updateUI();
+        }
+
+        function spawnRow() {
+            const spawnZ = -120; // Pushed spawn slightly further back to avoid seeing obstacles pop in early
+            let emptyLane = Math.floor(Math.random() * 3) - 1;
+
+            for (let lane = -1; lane <= 1; lane++) {
+                const xPos = lane * laneWidth;
+                if (lane === emptyLane) {
+                    if (Math.random() > 0.3) spawnItem(xPos, spawnZ, 'coin');
+                    continue;
+                }
+                const rand = Math.random();
+                if (rand < 0.15) spawnObstacle(xPos, spawnZ, 'train'); // 15% chance for Train
+                else if (rand < 0.30) spawnObstacle(xPos, spawnZ, 'obstacles'); // 15% chance for Barrier
+                else if (rand < 0.45) spawnObstacle(xPos, spawnZ, 'fencing'); // 15% chance for Fencing
+                else if (rand < 0.7) spawnItem(xPos, spawnZ, 'coin');
+                else if (rand < 0.75) spawnItem(xPos, spawnZ, 'jump');
+                else if (rand < 0.8) spawnItem(xPos, spawnZ, 'hoverboard');
+            }
+        }
+
+        function spawnObstacle(x, z, type) {
+            let mesh = loadedModels[type].clone();
+
+            // By default, the obstacle goes exactly in the center of the lane
+            let finalX = x;
+
+            // If it's the barrier, nudge it to the left to fix the off-center model
+            if (type === 'obstacles') {
+                finalX = x - 0.8; // Change this number if you need to fine-tune it! (- moves left, + moves right)
+            }
+
+            mesh.position.set(finalX, 0, z);
+            scene.add(mesh);
+            worldObjects.push({ mesh: mesh, type: 'obstacle', obstacleType: type });
+        }
+
+        function spawnItem(x, z, type) {
+            let mesh;
+            let yPos = 1.2;
+
+            if (type === 'coin') {
+                mesh = loadedModels['coin'].clone();
+                yPos = 2.2;
+            } else if (type === 'hoverboard') {
+                mesh = loadedModels['hoverboard'].clone();
+                yPos = 1.5;
+            } else if (type === 'jump') {
+                mesh = loadedModels['bootsJump'].clone();
+                yPos = 1.0;
+            } else if (type === 'obstacles') {
+                mesh = loadedModels['obstacles'].clone();
+                yPos = 1.0;
+            }
+
+            mesh.position.set(x, yPos, z);
+            scene.add(mesh);
+            worldObjects.push({ mesh: mesh, type: type });
+        }
+
+        function updatePhysics() {
+            player.position.x += (targetX - player.position.x) * 0.15;
+            cop.position.x += (player.position.x - cop.position.x) * 0.05;
+
+            if (!playerMixer && !isJumping && !flyMode) {
+                player.rotation.z = Math.sin(Date.now() * 0.01) * 0.1;
+                player.position.y = Math.abs(Math.sin(Date.now() * 0.015)) * 0.2;
+            } else {
+                player.rotation.z = 0;
+            }
+
+            if (flyMode) {
+                player.position.y += (4 - player.position.y) * 0.1;
+                flyTimer--;
+                if (flyTimer <= 0) {
+                    flyMode = false;
+                    playPlayerAnimation('run');
+                }
+            } else {
+                velocityY += gravity;
+                player.position.y += velocityY;
+                if (player.position.y <= 0) {
+                    player.position.y = 0;
+                    velocityY = 0;
+                    if (isJumping) {
+                        isJumping = false;
+                        playPlayerAnimation('run');
+                    }
+                }
+            }
+            // Magnet Timer
+            if (magnetTimer > 0) {
+                magnetTimer--;
+                if (magnetTimer <= 0) magnetActive = false;
+            }
+
+            if (jumpBoostTimer > 0) {
+                jumpBoostTimer--;
+                if (jumpBoostTimer <= 0) jumpStrength = baseJumpStrength;
+
+            } // Roll Timer and visual squish effect
+
+            if (isRolling) {
+                rollTimer--;
+                player.scale.y = player.scale.x * 0.5; // Squish the character down
+
+                if (rollTimer <= 0) {
+                    isRolling = false;
+                    player.scale.y = player.scale.x; // Stand back up to normal height
+                    if (!isJumping) {
+                        playPlayerAnimation('run');
+                    }
+                }
+            }
+
+            // Camera Shake Effect
+            if (shakeTimer > 0) {
+                shakeTimer--;
+                camera.position.x = (Math.random() - 0.5) * 0.8;
+                camera.position.y = 5 + (Math.random() - 0.5) * 0.8;
+            } else {
+                camera.position.x = 0;
+                camera.position.y = 5;
+            }
+
+            // Life Regeneration (Recovers 1 life every ~10 seconds)
+            if (lives < maxLives) {
+                lifeRegenTimer++;
+                if (lifeRegenTimer >= 600) {
+                    lives++;
+                    lifeRegenTimer = 0;
+                    playBeep(600, 'sine', 0.1); // Subtle chime when a life regenerates
+                }
+            }
+        }
+
+        function updateWorld() {
+            // --- PERFECT SCROLL GROUND TEXTURES ---
+            if (asphaltMaterial && asphaltMaterial.map) {
+                // Reversed to += and changed to exact ratio (100 repeats / 300 length)
+                asphaltMaterial.map.offset.y += speed * 0.3333;
+            }
+            if (grassMaterial && grassMaterial.map) {
+                grassMaterial.map.offset.y += speed * 0.3333;
+            }
+
+            // ... the rest of the function continues below
+            // --- END SCROLL ---
+
+            distance += speed;
+            score = Math.floor(distance / 10);
+            speed += 0.00003;
+
+            // Spawn Obstacles & City Buildings as we move forward
+            if (distance % 20 < speed) {
+                spawnRow();
+                spawnBuildingRow(-200); // Spawns distant scenery matching player speed
+            }
+
+            // Move procedural buildings
+            for (let i = buildings.length - 1; i >= 0; i--) {
+                let b = buildings[i];
+                b.position.z += speed;
+                // Delete buildings once they pass safely behind the camera
+                if (b.position.z > 30) {
+                    scene.remove(b);
+                    buildings.splice(i, 1);
+                }
+            }
+
+            const playerBox = new THREE.Box3().setFromObject(player);
+            playerBox.expandByScalar(-0.3);
+            // Shave off the top of the hitbox if rolling so we pass under fences
+            if (isRolling) {
+                playerBox.max.y -= 1.0;
+            }
+
+            for (let i = worldObjects.length - 1; i >= 0; i--) {
+                let obj = worldObjects[i];
+                obj.mesh.position.z += speed;
+
+                if (obj.type === 'coin' || obj.type === 'jump') {
+                    obj.mesh.rotation.y += 0.05;
+                } else if (obj.type === 'hoverboard') {
+                    obj.mesh.rotation.y += 0.02;
+                    obj.mesh.position.y = 1 + Math.sin(Date.now() * 0.005) * 0.2;
+                }
+
+                // PULL COINS TOWARD PLAYER IF MAGNET IS ACTIVE
+                if (magnetActive && obj.type === 'coin') {
+                    // Start pulling when they are close enough to see
+                    if (obj.mesh.position.z > -60) {
+                        // Mathematically curve them directly into the player's 3D coordinates
+                        obj.mesh.position.x += (player.position.x - obj.mesh.position.x) * 0.2;
+                        obj.mesh.position.y += ((player.position.y + 1) - obj.mesh.position.y) * 0.2;
+                        obj.mesh.position.z += (0 - obj.mesh.position.z) * 0.2; // Player is exactly at Z = 0
+
+                        // If the coin gets close to the player, vacuum it instantly!
+                        let dist = Math.abs(obj.mesh.position.x - player.position.x) +
+                            Math.abs(obj.mesh.position.y - (player.position.y + 1)) +
+                            Math.abs(obj.mesh.position.z - 0);
+
+                        if (dist < 3.5) { // 3.5 is the vacuum radius
+                            coinCount++;
+                            playBeep(600, 'sine');
+                            removeObject(i);
+                            continue; // Safely skip the rest of the loop so we don't check collision on a removed coin
+                        }
+                    }
+                }
+
+                const objBox = new THREE.Box3().setFromObject(obj.mesh);
+                if (obj.type === 'obstacle') {
+                    if (obj.obstacleType === 'train') {
+                        objBox.expandByScalar(-0.4); // Trains get a forgiving hitbox
+                    } else {
+                        objBox.expandByScalar(-0.1); // Barriers shrink slightly so their hitbox doesn't disappear!
+                    }
+                }
+
+                if (playerBox.intersectsBox(objBox)) {
+                    if (obj.type === 'obstacle') {
+                        if (!flyMode) {
+                            if (skateboardActive) {
+                                skateboardActive = false; // Shield breaks!
+                                shakeTimer = 10;
+                                playBeep(300, 'sawtooth', 0.3); // Wood break sound
+                                removeObject(i);
+                            } else {
+                                lives--;
+                                shakeTimer = 20; // 20 frames of screen shake
+                                playBeep(150, 'sawtooth', 0.2); // "Oof" crash sound
+                                removeObject(i); // Break the obstacle so it doesn't double-hit you
+
+                                if (lives <= 0) {
+                                    gameOver(); // Only die if lives hit 0
+                                }
+                            }
+                        }
+                    } else if (obj.type === 'coin') {
+                        coinCount++;
+                        playBeep(600, 'sine');
+                        removeObject(i);
+                    } else if (obj.type === 'jump') {
+                        jumpStrength = 0.5;
+                        jumpBoostTimer = baseJumpBoostTimer;
+                        playBeep(800, 'square');
+                        removeObject(i);
+                    } else if (obj.type === 'hoverboard') {
+                        flyMode = true;
+                        flyTimer = baseFlyTimer;
+                        velocityY = 0;
+                        playBeep(1000, 'triangle');
+                        playPlayerAnimation('fly');
+                        removeObject(i);
+                    }
+                } else if (obj.mesh.position.z > 15) {
+                    removeObject(i);
+                }
+            }
+
+            updateUI();
+        }
+
+        function removeObject(index) {
+            scene.remove(worldObjects[index].mesh);
+            worldObjects.splice(index, 1);
+        }
+
+        function quitToMenu() {
+            gameActive = false;
+            document.getElementById('action-buttons').style.display = 'none';
+            stopMusic();
+
+            // Save run coins and distance to bank/missions
+            totalCoins += coinCount;
+            totalDistanceRun += score;
+
+            missions.forEach(m => {
+                if (m.claimed) return; // Skip if already claimed
+
+                if (m.type === "distance" && score > m.progress) m.progress = score;
+                if (m.type === "coins_run" && coinCount > m.progress) m.progress = coinCount;
+                if (m.type === "coins_total") m.progress += coinCount;
+                if (m.type === "distance_total") m.progress += score;
+
+                // Cap progress
+                if (m.progress > m.target) m.progress = m.target;
+            });
+
+            // Show the main menu
+            document.getElementById('menu').style.display = 'flex';
+            document.getElementById('menu-title').innerText = "Run Ended";
+            document.getElementById('menu-stats').innerHTML = `Final Score: ${score}<br>Run Coins: ${coinCount}`;
+            document.getElementById('menu-total-coins').innerText = totalCoins;
+            document.getElementById('startBtn').innerText = "Play Again";
+        }
+
+        function gameOver() {
+            gameActive = false;
+            document.getElementById('action-buttons').style.display = 'none';
+            stopMusic();
+            playBeep(200, 'sawtooth', 1);
+            playPlayerAnimation('die');
+
+            // Add run coins to total bank
+            totalCoins += coinCount;
+            totalDistanceRun += score;
+
+            // Update Mission Progress
+            missions.forEach(m => {
+                if (m.claimed) return; // Skip if already claimed
+
+                if (m.type === "distance" && score > m.progress) m.progress = score;
+                if (m.type === "coins_run" && coinCount > m.progress) m.progress = coinCount;
+                if (m.type === "coins_total") m.progress += coinCount;
+                if (m.type === "distance_total") m.progress += score;
+
+                // Cap progress so it doesn't go over the target visually
+                if (m.progress > m.target) m.progress = m.target;
+            });
+
+            document.getElementById('menu').style.display = 'flex';
+            document.getElementById('menu-title').innerText = "Busted!";
+            document.getElementById('menu-stats').innerHTML = `Final Score: ${score}<br>Run Coins: ${coinCount}`;
+            document.getElementById('menu-total-coins').innerText = totalCoins;
+            document.getElementById('startBtn').innerText = "Play Again";
+        }
+
+        function updateUI() {
+            document.getElementById('score').innerText = score;
+            document.getElementById('coins').innerText = coinCount;
+            let status = `Lives: ${lives} | `;
+            if (flyMode) status += "HOVERBOARD ACTIVE! ";
+            if (jumpBoostTimer > 0) status += "JUMP BOOST! ";
+            if (skateboardActive) status += "SKATEBOARD SHIELD! ";
+            if (magnetActive) status += "MAGNET ACTIVE! ";
+            document.getElementById('powerup-status').innerText = status;
+        }
+
+        function onKeyDown(event) {
+            if (!gameActive) return;
+            if (event.code === 'Escape') {
+                togglePause();
+                return;
+            }
+            if (!gameActive || isPaused) return;
+            if ((event.code === 'ArrowLeft' || event.code === 'KeyA') && currentLane > -1) {
+                currentLane--; targetX = currentLane * laneWidth;
+            } else if ((event.code === 'ArrowRight' || event.code === 'KeyD') && currentLane < 1) {
+                currentLane++; targetX = currentLane * laneWidth;
+            } else if (event.code === 'Space') {
+                if (!isJumping && !flyMode) {
+                    velocityY = jumpStrength;
+                    isJumping = true;
+                    playBeep(400, 'sine', 0.1);
+                    playPlayerAnimation('jump');
+                }
+            } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
+                if (!flyMode) {
+                    if (isJumping) {
+                        velocityY = -0.5; // Fast-fall to the ground instantly
+                    }
+                    isRolling = true;
+                    rollTimer = 40; // Roll lasts for 40 frames
+                }
+            } else if (event.code === 'KeyQ') {
+                document.getElementById('useMagnetBtn').click();
+            } else if (event.code === 'KeyE') {
+                document.getElementById('useSkateboardBtn').click();
+            }
+
+
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+
+            if (gameActive && !isPaused) {
+                animationMixers.forEach(mixer => mixer.update(delta));
+                updatePhysics();
+                updateWorld();
+            }
+            renderer.render(scene, camera);
+        }
+
+        // --- AUDIO ---
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            startMusic();
+        }
+
+        function playBeep(freq, type, duration = 0.1) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function startMusic() {
+            stopMusic();
+            let step = 0;
+            musicInterval = setInterval(() => {
+                if (!gameActive) return;
+                if (step % 4 === 0) playBeep(60, 'sine', 0.2);
+                else if (step % 4 === 2) playBeep(120, 'triangle', 0.1);
+                step++;
+            }, 200);
+        }
+
+        function stopMusic() { if (musicInterval) clearInterval(musicInterval); }
+        function openStore() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('store-menu').style.display = 'flex';
+            document.getElementById('store-coins').innerText = totalCoins;
+        }
+
+        function closeStore() {
+            document.getElementById('store-menu').style.display = 'none';
+            document.getElementById('menu').style.display = 'flex';
+            document.getElementById('menu-total-coins').innerText = totalCoins;
+        }
+
+        function handleSkinClick(skin, price, colorHex, btnId) {
+            if (unlockedSkins[skin]) {
+                equipSkin(colorHex);
+                alert("Equipped " + skin + " skin!");
+            } else {
+                if (totalCoins >= price) {
+                    totalCoins -= price;
+                    unlockedSkins[skin] = true;
+                    equipSkin(colorHex);
+                    document.getElementById('store-coins').innerText = totalCoins;
+                    document.getElementById(btnId).innerText = "Equip " + skin.charAt(0).toUpperCase() + skin.slice(1);
+                    alert("Bought and equipped " + skin + " skin!");
+                } else {
+                    alert("Not enough coins! You need " + price);
+                }
+            }
+        }
+
+        function equipSkin(colorHex) {
+            if (!player) return;
+            player.traverse(function (child) {
+                if (child.isMesh && child.material) {
+                    // Tinting the material color
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => mat.color.setHex(colorHex));
+                    } else {
+                        child.material.color.setHex(colorHex);
+                    }
+                }
+            });
+        }
+
+        // --- MISSIONS LOGIC ---
+        document.getElementById('missionsBtn').addEventListener('click', openMissions);
+        document.getElementById('closeMissionsBtn').addEventListener('click', closeMissions);
+
+        function openMissions() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('missions-menu').style.display = 'flex';
+            document.getElementById('missions-coins').innerText = totalCoins;
+            renderMissions();
+        }
+
+        function closeMissions() {
+            document.getElementById('missions-menu').style.display = 'none';
+            document.getElementById('menu').style.display = 'flex';
+            document.getElementById('menu-total-coins').innerText = totalCoins;
+        }
+
+        function renderMissions() {
+            const container = document.getElementById('mission-container');
+            container.innerHTML = ''; // Clear previous list
+
+            missions.forEach(m => {
+                const isComplete = m.progress >= m.target;
+                let btnHTML = '';
+
+                if (m.claimed) {
+                    btnHTML = `<button class="mission-btn claimed" disabled>Claimed ✓</button>`;
+                } else if (isComplete) {
+                    btnHTML = `<button class="mission-btn" style="background: #4CAF50; box-shadow: 0 5px 0 #1B5E20;" onclick="claimMission(${m.id})">Claim ${m.reward} 🟡</button>`;
+                } else {
+                    btnHTML = `<button class="mission-btn locked" disabled>${m.progress} / ${m.target}</button>`;
+                }
+
+                container.innerHTML += `
+                    <div class="mission-card">
+                        <div class="mission-info">
+                            <h3>${m.text}</h3>
+                            <p>Reward: ${m.reward} Coins</p>
+                        </div>
+                        ${btnHTML}
+                    </div>
+                `;
+            });
+        }
+
+        function claimMission(id) {
+            let m = missions.find(x => x.id === id);
+            if (m && !m.claimed && m.progress >= m.target) {
+                m.claimed = true;
+                totalCoins += m.reward;
+                document.getElementById('missions-coins').innerText = totalCoins;
+                playBeep(600, 'sine', 0.1);
+                playBeep(800, 'sine', 0.2); // Double beep for celebration
+                renderMissions(); // Redraw UI
+            }
+        }
+
+        // --- UPGRADE STORE LOGIC ---
+        document.getElementById('btn-upg-lives').addEventListener('click', () => handleUpgradeClick('lives'));
+        document.getElementById('btn-upg-hoverboard').addEventListener('click', () => handleUpgradeClick('hoverboard'));
+        document.getElementById('btn-upg-boots').addEventListener('click', () => handleUpgradeClick('boots'));
+        document.getElementById('btn-upg-magnet').addEventListener('click', () => handleUpgradeClick('magnet'));
+
+        function handleUpgradeClick(type) {
+            let cost = upgradeCosts[type];
+            if (totalCoins >= cost) {
+                totalCoins -= cost; // Take coins
+                upgradeLevels[type]++; // Level up
+                document.getElementById('store-coins').innerText = totalCoins; // Update UI
+
+                if (type === 'lives') {
+                    maxLives++; // Permanently add 1 max life
+                    upgradeCosts.lives += 100; // Increase price for next time
+                    document.getElementById('cost-lives').innerText = upgradeCosts.lives + " Coins";
+                    document.getElementById('btn-upg-lives').innerText = "Lvl " + upgradeLevels.lives;
+                } else if (type === 'hoverboard') {
+                    baseFlyTimer += 100; // Add 100 frames to jetpack duration
+                    upgradeCosts.hoverboard += 50;
+                    document.getElementById('cost-hoverboard').innerText = upgradeCosts.hoverboard + " Coins";
+                    document.getElementById('btn-upg-hoverboard').innerText = "Lvl " + upgradeLevels.hoverboard;
+                } else if (type === 'boots') {
+                    baseJumpBoostTimer += 150; // Add 150 frames to boots duration
+                    upgradeCosts.boots += 50;
+                    document.getElementById('cost-boots').innerText = upgradeCosts.boots + " Coins";
+                    document.getElementById('btn-upg-boots').innerText = "Lvl " + upgradeLevels.boots;
+                } else if (type === 'magnet') {
+                    baseMagnetTimer += 150; // Add 150 frames to magnet duration
+                    upgradeCosts.magnet += 50;
+                    document.getElementById('cost-magnet').innerText = upgradeCosts.magnet + " Coins";
+                    document.getElementById('btn-upg-magnet').innerText = "Lvl " + upgradeLevels.magnet;
+                }
+
+                playBeep(800, 'square', 0.1); // Success sound
+            } else {
+                alert("Not enough coins! You need " + cost);
+            }
+        }
+        // --- CONSUMABLES LOGIC ---
+        function updateConsumableUI() {
+            document.getElementById('magnet-count').innerText = inventory.magnets;
+            document.getElementById('skateboard-count').innerText = inventory.skateboards;
+        }
+
+        document.getElementById('btn-buy-magnet').addEventListener('click', () => {
+            if (totalCoins >= 20) {
+                totalCoins -= 20; inventory.magnets++;
+                document.getElementById('store-coins').innerText = totalCoins;
+                updateConsumableUI(); playBeep(800, 'square', 0.1);
+            } else alert("Not enough coins!");
+        });
+
+        document.getElementById('btn-buy-skateboard').addEventListener('click', () => {
+            if (totalCoins >= 30) {
+                totalCoins -= 30; inventory.skateboards++;
+                document.getElementById('store-coins').innerText = totalCoins;
+                updateConsumableUI(); playBeep(800, 'square', 0.1);
+            } else alert("Not enough coins!");
+        });
+
+        document.getElementById('useMagnetBtn').addEventListener('click', () => {
+            if (!gameActive || isPaused || inventory.magnets <= 0 || magnetActive) return;
+            inventory.magnets--;
+            updateConsumableUI();
+
+            magnetActive = true;
+            magnetTimer = baseMagnetTimer;
+
+            playBeep(900, 'sine', 0.5); // Turn on sound
+            updateUI();
+        });
+
+        document.getElementById('useSkateboardBtn').addEventListener('click', () => {
+            if (!gameActive || isPaused || inventory.skateboards <= 0 || skateboardActive) return;
+            inventory.skateboards--;
+            updateConsumableUI();
+            skateboardActive = true;
+
+            // Give the Super Jump effect
+            jumpStrength = 0.5;
+            jumpBoostTimer = baseJumpBoostTimer;
+
+            playBeep(700, 'triangle', 0.3);
+            updateUI();
+        });
+
+        init();
+    </script>
+</body>
+
+</html>
